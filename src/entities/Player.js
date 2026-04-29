@@ -25,6 +25,7 @@ export class Player {
     this.fuel = 100;
     
     this.keys = { w: false, a: false, s: false, d: false };
+    this._engineSoundOn = false;
     this.setupInputs();
   }
   
@@ -69,21 +70,35 @@ export class Player {
     }
 
     if (atGasStation && this.fuel < 100) {
-        const costPerPercent = 100;
-        const fuelNeeded = 100 - this.fuel; // Lượng xăng thực tế cần bù cho đầy
-        const totalCost = fuelNeeded * costPerPercent;
+        // Nạp theo kiểu "có bao nhiêu tiền thì đổ bấy nhiêu".
+        // (Giả sử giá theo % xăng; fuel có thể là số thực)
+        const costPerPercent = 110; // tăng giá xăng nhẹ
+        const fuelNeeded = 100 - this.fuel; // lượng xăng còn thiếu để lên 100
+        const money = this.game.orderSystem.stats.money;
 
-        if (this.game.orderSystem.stats.money >= totalCost) {
-            // Thực hiện nạp đầy và trừ tiền NGAY LẬP TỨC
-            this.fuel = 100;
-            this.game.orderSystem.stats.money -= totalCost;
-
-            // Thông báo một lần
-            this.game.ui.showNotification(`⛽ Đã nạp đầy bình! -${Math.round(totalCost).toLocaleString()}đ`, 2000);
+        if (money <= 0) {
+            if (Math.random() < 0.02) this.game.ui.showNotification("🚫 Không đủ tiền để nạp xăng!", 1000);
         } else {
-            // Nếu không đủ tiền nạp đầy, chỉ thông báo 1 lần khi chạm vào
-            if (Math.random() < 0.02) { 
-                this.game.ui.showNotification("🚫 Không đủ tiền để nạp đầy bình!", 1000);
+            const maxAffordableFuel = money / costPerPercent;
+            const fuelToAdd = Math.min(fuelNeeded, maxAffordableFuel);
+
+            if (fuelToAdd > 0.0001) {
+                const totalCost = fuelToAdd * costPerPercent;
+
+                this.fuel = Math.min(100, this.fuel + fuelToAdd);
+                this.game.orderSystem.stats.money -= totalCost;
+
+                const addedPctText = fuelToAdd.toFixed(1);
+                const costRounded = Math.round(totalCost);
+
+                if (this.fuel >= 100 - 0.001) {
+                    this.game.ui.showNotification(`⛽ Đã nạp đầy bình! -${costRounded.toLocaleString()}đ`, 2000);
+                } else {
+                    this.game.ui.showNotification(`⛽ Đã nạp +${addedPctText}% -${costRounded.toLocaleString()}đ`, 1500);
+                }
+            } else {
+                // Tiền còn quá ít để mua thêm ~1%.
+                if (Math.random() < 0.02) this.game.ui.showNotification("🚫 Không đủ tiền để nạp thêm!", 1000);
             }
         }
     }
@@ -114,16 +129,28 @@ export class Player {
       }
     }
 
-    // 3. Âm thanh tiếng xe tăng tốc (engine) - phát theo tốc độ khi người chơi đang nhấn WASD
+    // 3. Âm thanh tiếng xe tăng tốc (engine) - êm bằng hysteresis
+    //    Tránh việc bật/tắt mỗi frame khi speed dao động quanh ngưỡng.
     const movingInput = this.keys.w || this.keys.a || this.keys.s || this.keys.d;
     const v = this.body.velocity;
     const speed = Math.hypot(v.x, v.y);
 
-    if (movingInput && speed > 0.12) {
+    const onThreshold = 0.18;
+    const offThreshold = 0.09;
+
+    const wantOn = movingInput && speed > onThreshold;
+    const wantOff = !movingInput || speed < offThreshold;
+
+    if (!this._engineSoundOn && wantOn) {
       Sfx.engineOn();
-      Sfx.engineUpdate(speed);
-    } else {
+      this._engineSoundOn = true;
+    } else if (this._engineSoundOn && wantOff) {
       Sfx.engineOff();
+      this._engineSoundOn = false;
+    }
+
+    if (this._engineSoundOn) {
+      Sfx.engineUpdate(speed);
     }
   }
   

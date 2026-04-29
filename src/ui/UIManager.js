@@ -4,6 +4,7 @@ export class UIManager {
   constructor(game) {
     this.game = game;
     this.saveSystem = new SaveSystem();
+    this._playedShiftStartSound = false;
     
     this.els = {
       mainMenu: document.getElementById('mainMenu'),
@@ -48,6 +49,10 @@ export class UIManager {
     BGM.start();
     // Tiếng click xác nhận
     Sfx.uiConfirm();
+    if (!this._playedShiftStartSound) {
+      Sfx.shiftStart();
+      this._playedShiftStartSound = true;
+    }
       this.els.mainMenu.classList.add('hidden');
       this.els.hud.classList.remove('hidden');
       this.game.startShift();

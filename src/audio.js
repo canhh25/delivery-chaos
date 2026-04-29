@@ -114,7 +114,8 @@ function ensureEngineNodes() {
   if (engine.osc) return;
 
   engine.osc = audioCtx.createOscillator();
-  engine.osc.type = 'sawtooth';
+  // Triangle sound tends to be less harsh than sawtooth (êm hơn).
+  engine.osc.type = 'triangle';
 
   engine.filter = audioCtx.createBiquadFilter();
   engine.filter.type = 'lowpass';
@@ -253,6 +254,18 @@ export const Sfx = {
     playOneShotTone(660, 0.06, { type: 'triangle', gain: 0.22 });
   },
 
+  shiftStart() {
+    // Sound when starting a new shift (only on first access/session click).
+    if (!ensureAudioReady()) return;
+    ensureAudioRunning().catch(() => {});
+
+    // Soft rising stinger.
+    playOneShotTone(392, 0.07, { type: 'triangle', gain: 0.18 }); // G4
+    playOneShotTone(494, 0.08, { type: 'triangle', gain: 0.14 }); // B4
+    playOneShotTone(587.33, 0.09, { type: 'sine', gain: 0.14 }); // D5
+    playNoiseBurst({ durationSec: 0.09, volume: 0.16, tone: 1200 });
+  },
+
   redLightPenalty() {
     // Warning + penalty "beep" when money is deducted.
     if (!ensureAudioReady()) return;
@@ -317,9 +330,11 @@ export const Sfx = {
   engineOn() {
     if (!ensureAudioReady()) return;
     ensureEngineNodes();
+    if (engine.active) return;
+
     engine.active = true;
-    engine.gain.gain.cancelScheduledValues(audioCtx.currentTime);
-    engine.gain.gain.setTargetAtTime(0.02, audioCtx.currentTime, 0.05);
+    // Ramp in smoothly (không cancel mỗi frame).
+    engine.gain.gain.setTargetAtTime(0.018, audioCtx.currentTime, 0.12);
   },
 
   engineUpdate(speed) {
@@ -328,23 +343,27 @@ export const Sfx = {
 
     // Matter velocities are "small", so normalize with a forgiving curve.
     const v = clamp(speed, 0, 4);
-    const factor = Math.pow(v / 4, 0.65); // smooth ramp
+    // Curve nhẹ để giảm độ "gắt" khi tăng ga nhanh.
+    const factor = Math.pow(v / 4, 0.8);
 
-    const freq = 110 + factor * 260; // pitch
-    const vol = 0.015 + factor * 0.11; // loudness
-    const cutoff = 420 + factor * 2200;
+    const freq = 95 + factor * 200; // pitch (giảm dải)
+    const vol = 0.01 + factor * 0.075; // loudness (êm hơn)
+    const cutoff = 360 + factor * 1400; // filter cutoff (giảm dải)
 
     const t = audioCtx.currentTime;
-    engine.osc.frequency.setTargetAtTime(freq, t, 0.06);
-    engine.filter.frequency.setTargetAtTime(cutoff, t, 0.06);
-    engine.gain.gain.setTargetAtTime(vol, t, 0.08);
+    // Smoothing chậm hơn -> cảm giác êm.
+    engine.osc.frequency.setTargetAtTime(freq, t, 0.14);
+    engine.filter.frequency.setTargetAtTime(cutoff, t, 0.14);
+    engine.gain.gain.setTargetAtTime(vol, t, 0.18);
   },
 
   engineOff() {
     if (!ensureAudioReady()) return;
     if (!engine.osc) return;
+    if (!engine.active) return;
+
     engine.active = false;
-    engine.gain.gain.setTargetAtTime(0.0001, audioCtx.currentTime, 0.06);
+    engine.gain.gain.setTargetAtTime(0.0001, audioCtx.currentTime, 0.18);
   },
 };
 
