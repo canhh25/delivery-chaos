@@ -1,4 +1,5 @@
 import { Bodies, Body, Composite, world } from '../physics.js';
+import { Sfx } from '../audio.js';
 
 export class Player {
   constructor(game, x, y) {
@@ -51,6 +52,7 @@ export class Player {
     // Kiểm tra hết xăng
     if (this.fuel <= 0) {
         this.fuel = 0;
+        Sfx.engineOff();
         this.game.triggerGameOver("HẾT XĂNG! Xe chết máy giữa đường.");
         return;
     }
@@ -110,6 +112,18 @@ export class Player {
         const angle = Math.atan2(this.body.velocity.y, this.body.velocity.x);
         Body.setAngle(this.body, angle + Math.PI / 2);
       }
+    }
+
+    // 3. Âm thanh tiếng xe tăng tốc (engine) - phát theo tốc độ khi người chơi đang nhấn WASD
+    const movingInput = this.keys.w || this.keys.a || this.keys.s || this.keys.d;
+    const v = this.body.velocity;
+    const speed = Math.hypot(v.x, v.y);
+
+    if (movingInput && speed > 0.12) {
+      Sfx.engineOn();
+      Sfx.engineUpdate(speed);
+    } else {
+      Sfx.engineOff();
     }
   }
   

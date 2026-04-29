@@ -1,5 +1,5 @@
 import { SaveSystem } from '../systems/SaveSystem.js';
-
+import { initAudio, BGM, Sfx } from '/src/audio.js';
 export class UIManager {
   constructor(game) {
     this.game = game;
@@ -42,6 +42,12 @@ export class UIManager {
 
   setupEvents() {
     document.getElementById('btnPlay').addEventListener('click', () => {
+      // Kích hoạt hệ thống âm thanh
+    initAudio(); 
+    // Phát nhạc nền lo-fi
+    BGM.start();
+    // Tiếng click xác nhận
+    Sfx.uiConfirm();
       this.els.mainMenu.classList.add('hidden');
       this.els.hud.classList.remove('hidden');
       this.game.startShift();

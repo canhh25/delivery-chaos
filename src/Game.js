@@ -7,6 +7,7 @@ import { OrderSystem } from './systems/OrderSystem.js';
 import { WeatherSystem } from './systems/WeatherSystem.js';
 import { UIManager } from './ui/UIManager.js';
 import { TrafficLightSystem } from './systems/TrafficLightSystem.js';
+import { BGM, Sfx } from './audio.js';
 
 export class Game {
   constructor() {
@@ -45,15 +46,21 @@ export class Game {
   startShift() {
     this.state = 'PLAYING';
     this.orderSystem.shiftTimer = this.orderSystem.shiftLength;
+    // Safety: ensure background music is running when the shift actually starts.
+    BGM.start();
   }
   
   endShift() {
     this.state = 'DAY_END';
+    BGM.stop();
+    Sfx.engineOff();
     this.ui.showEndOfDay(this.orderSystem.stats);
   }
   
   triggerGameOver(reason) {
     this.state = 'GAMEOVER';
+    BGM.stop();
+    Sfx.engineOff();
     this.ui.showGameOver(reason);
   }
   
@@ -110,12 +117,15 @@ export class Game {
       this.redLightCooldowns[intId] = now;
       this.orderSystem.stats.money -= 10000;
       this.ui.showNotification("🛑 VƯỢT ĐÈN ĐỎ! Phạt 10,000đ", 3000);
+      Sfx.redLightPenalty();
       this.renderer.shakeTime = 0.2;
     }
   }
 
   handleCollision(type) {
     this.renderer.shakeTime = 0.3;
+
+    Sfx.collision(type);
     
     if (type === 'Vehicle') {
       this.orderSystem.stats.collisions++;

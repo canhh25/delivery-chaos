@@ -1,3 +1,5 @@
+import { Sfx } from '../audio.js';
+
 export class OrderSystem {
   constructor(game) {
     this.game = game;
@@ -49,6 +51,7 @@ export class OrderSystem {
           this.orders[emptySlot] = p;
           this.pendingPickups.splice(i, 1);
           this.game.ui.showNotification(`📦 Nhận đơn: ${p.customer.name}`);
+          Sfx.orderPickup();
         } else {
           // Túi đầy
           if (Math.random() < 0.05) this.game.ui.showNotification("🚫 Túi hàng đã đầy (Tối đa 3 đơn)!", 1000);
@@ -134,6 +137,8 @@ export class OrderSystem {
     let msg = `✅ Giao thành công! +${earned.toLocaleString()}đ`;
     if (this.comboCount > 0) msg = `🔥 COMBO x${comboMult}! +${earned.toLocaleString()}đ`;
     this.game.ui.showNotification(msg, 3000);
+
+    Sfx.orderDeliverSuccess();
   }
   
   failOrder(slotIndex) {
