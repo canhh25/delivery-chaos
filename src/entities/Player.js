@@ -40,40 +40,50 @@ export class Player {
   
   update(dt) {
     if (this.game.state !== 'PLAYING') return;
-    
-    // Tiêu hao xăng (100% tốn khoảng 3 phút nếu chạy liên tục)
+
+    // 1. TIÊU HAO XĂNG
+    // Chỉ trừ xăng khi có nhấn phím di chuyển (w, a, s, d)
     if (this.keys.w || this.keys.a || this.keys.s || this.keys.d) {
-      this.fuel -= 0.6 * (dt / 1000);
-    } else {
-      this.fuel -= 0.1 * (dt / 1000); // Đứng yên tốn ít xăng hơn
-    }
-    
+        this.fuel -= 0.6 * (dt / 1000); 
+    } 
+    // Không có else -> Đứng yên không trừ xăng
+
+    // Kiểm tra hết xăng
     if (this.fuel <= 0) {
-      this.fuel = 0;
-      this.game.triggerGameOver("HẾT XĂNG! Xe chết máy giữa đường.");
-      return;
+        this.fuel = 0;
+        this.game.triggerGameOver("HẾT XĂNG! Xe chết máy giữa đường.");
+        return;
     }
 
-    // Xử lý nạp xăng tại Trạm Xăng
+    // 2. XỬ LÝ NẠP XĂNG (Đổ đầy ngay - Trừ tiền một lần)
     let atGasStation = false;
     for (const g of this.game.map.gasStations) {
-      const px = this.body.position.x;
-      const py = this.body.position.y;
-      if (px > g.x && px < g.x + g.w && py > g.y && py < g.y + g.h) {
-        atGasStation = true;
-        break;
-      }
+        const px = this.body.position.x;
+        const py = this.body.position.y;
+        if (px > g.x && px < g.x + g.w && py > g.y && py < g.y + g.h) {
+            atGasStation = true;
+            break;
+        }
     }
-    
+
     if (atGasStation && this.fuel < 100) {
-      const costPerPercent = 100; // 100đ cho 1% xăng
-      if (this.game.orderSystem.stats.money >= costPerPercent) {
-        this.fuel += 10 * (dt / 1000); // 10% mỗi giây
-        this.game.orderSystem.stats.money -= costPerPercent * 10 * (dt / 1000);
-        if (this.fuel >= 100) this.fuel = 100;
-      } else {
-        this.game.ui.showNotification("🚫 Không đủ tiền đổ xăng!", 1000);
-      }
+        const costPerPercent = 100;
+        const fuelNeeded = 100 - this.fuel; // Lượng xăng thực tế cần bù cho đầy
+        const totalCost = fuelNeeded * costPerPercent;
+
+        if (this.game.orderSystem.stats.money >= totalCost) {
+            // Thực hiện nạp đầy và trừ tiền NGAY LẬP TỨC
+            this.fuel = 100;
+            this.game.orderSystem.stats.money -= totalCost;
+
+            // Thông báo một lần
+            this.game.ui.showNotification(`⛽ Đã nạp đầy bình! -${Math.round(totalCost).toLocaleString()}đ`, 2000);
+        } else {
+            // Nếu không đủ tiền nạp đầy, chỉ thông báo 1 lần khi chạm vào
+            if (Math.random() < 0.02) { 
+                this.game.ui.showNotification("🚫 Không đủ tiền để nạp đầy bình!", 1000);
+            }
+        }
     }
 
     let forceX = 0;

@@ -97,45 +97,76 @@ export class MapSystem {
         }
         
         if (!isRoad && w > 20 && h > 20) {
-          // Vỉa hè
-          const padding = 12;
-          if (w > padding*2 && h > padding*2) {
-            const bWidth = w - padding * 2;
-            const bHeight = h - padding * 2;
-            const bx = left + padding;
-            const by = top + padding;
-            
-            const rand = Math.random();
-            let type = 'HOUSE'; let color = '#795548'; let icon = '';
-            
-            if (bWidth > 150 && bHeight > 150) {
-              if (rand < 0.15) { type = 'GAS_STATION'; color = '#FF9800'; icon = '⛽'; }
-              else if (rand < 0.35) { type = 'MARKET'; color = '#d32f2f'; icon = '🛒'; }
-              else { type = 'APARTMENT'; color = '#607d8b'; }
-            } else {
-              if (rand < 0.2) { type = 'RESTAURANT'; color = '#ff9800'; icon = '🍜'; }
-              else if (rand < 0.4) { type = 'APARTMENT'; color = '#607d8b'; }
-            }
-            
-            this.buildings.push({
-              x: bx, y: by, w: bWidth, h: bHeight, type, color, icon, blockW: w, blockH: h, blockX: left, blockY: top
-            });
-            
-            if (type === 'GAS_STATION') {
-              this.gasStations.push({ x: bx, y: by, w: bWidth, h: bHeight });
-            }
-            
-            blockBodies.push(Bodies.rectangle(bx + bWidth/2, by + bHeight/2, bWidth, bHeight, {
-              isStatic: true, label: 'Building'
-            }));
-            
-            // Random Trees
-            if (Math.random() < 0.7) {
-               this.trees.push({x: left + padding/2, y: top + h/2});
-               this.trees.push({x: left + w - padding/2, y: top + h/2});
-            }
-          }
-        }
+    const padding = 12; // Vỉa hè mặc định
+    const bWidth = w - padding * 2;
+    const bHeight = h - padding * 2;
+    const bx = left + padding;
+    const by = top + padding;
+
+    const rand = Math.random();
+    let type = 'HOUSE'; 
+    let color = '#795548'; 
+    let icon = '';
+
+    // Phân loại công trình (Giữ nguyên tỉ lệ cũ)
+    if (bWidth > 150 && bHeight > 150) {
+        if (rand < 0.15) { type = 'GAS_STATION'; color = '#FF9800'; icon = '⛽'; }
+        else if (rand < 0.35) { type = 'MARKET'; color = '#d32f2f'; icon = '🛒'; }
+        else { type = 'APARTMENT'; color = '#607d8b'; }
+    } else {
+        if (rand < 0.2) { type = 'RESTAURANT'; color = '#ff9800'; icon = '🍜'; }
+        else if (rand < 0.4) { type = 'APARTMENT'; color = '#607d8b'; }
+    }
+
+    if (type === 'GAS_STATION') {
+        // --- CHẾ ĐỘ XÂY DỰNG TRẠM XĂNG (CÓ HẺM VÀO SÂU) ---
+        // 1. Định nghĩa độ sâu hẻm (80px là đủ để xe quay đầu thoải mái)
+        const alleyDepth = 80; 
+        
+        // 2. Cắt bỏ vỉa hè phía trước và đẩy tòa nhà lùi vào trong
+        const buildingX = bx + alleyDepth; 
+        const buildingW = bWidth - alleyDepth;
+
+        this.buildings.push({
+            x: buildingX, y: by, w: buildingW, h: bHeight, 
+            type, color, icon, blockW: w, blockH: h, blockX: left, blockY: top,
+            hasAlley: true,
+            // Lưu tọa độ hẻm để vẽ sau này
+            alleyRect: { x: bx, y: by, w: alleyDepth, h: bHeight }
+        });
+
+        // 3. Đăng ký vùng đổ xăng (Sensor) nằm đúng trong hẻm trống
+        this.gasStations.push({ 
+            x: bx, y: by, w: alleyDepth, h: bHeight 
+        });
+
+        // 4. VẬT LÝ - CHỈ TẠO KHỐI CỨNG CHO PHẦN TÒA NHÀ THỤT LÙI
+        blockBodies.push(Bodies.rectangle(buildingX + buildingW/2, by + bHeight/2, buildingW, bHeight, {
+            isStatic: true, label: 'Building'
+        }));
+
+        // 5. VẬT LÝ - TẠO SENSOR CHO HẺM (Xe lái vào được để đổ xăng)
+        // Đặt label là 'GasStation' để Game.js nhận diện và đổ xăng
+        blockBodies.push(Bodies.rectangle(bx + alleyDepth/2, by + bHeight/2, alleyDepth, bHeight, {
+            isStatic: true, isSensor: true, label: 'GasStation'
+        }));
+
+    } else {
+        // --- CHẾ ĐỘ XÂY DỰNG BÌNH THƯỜNG (Giữ nguyên code cũ) ---
+        this.buildings.push({
+            x: bx, y: by, w: bWidth, h: bHeight, type, color, icon, blockW: w, blockH: h, blockX: left, blockY: top
+        });
+
+        blockBodies.push(Bodies.rectangle(bx + bWidth/2, by + bHeight/2, bWidth, bHeight, {
+            isStatic: true, label: 'Building'
+        }));
+    }
+
+    // Spawn cây xanh (giữ nguyên)
+    if (Math.random() < 0.7) {
+        this.trees.push({x: left + padding/2, y: top + h/2});
+    }
+}
       }
     }
     
