@@ -145,12 +145,11 @@ export class OrderSystem {
     this.orders[slotIndex] = null;
     this.stats.failedOrders++;
     this.stats.money -= 10000; // Trừ tiền
-    this.updateRating(-0.5); // Giảm sao
     this.game.ui.showNotification("❌ Đơn hàng quá hạn! Phạt 10,000đ", 3000);
     this.comboCount = 0;
     
-    if (this.stats.rating < 2.0) {
-      this.game.triggerGameOver("Bị đuổi việc vì Rating quá thấp (< 2.0)");
+    if (this.stats.money <= 0) {
+      this.game.triggerGameOver("Tiền của bạn đã hết, bạn bị sa thải!");
     }
   }
   

@@ -10,20 +10,14 @@ export class UIManager {
       mainMenu: document.getElementById('mainMenu'),
       hud: document.getElementById('hud'),
       gameOver: document.getElementById('gameOver'),
-      endDay: document.getElementById('endDay'),
+      endOfDay: document.getElementById('endOfDay'),
       hudMoney: document.getElementById('hudMoney'),
       hudTimer: document.getElementById('hudTimer'),
       hudRating: document.getElementById('hudRating'),
       hudFuel: document.getElementById('hudFuel'),
       ordersContainer: document.getElementById('ordersContainer'),
       notifToast: document.getElementById('notifToast'),
-      leaderboardList: document.getElementById('leaderboardList'),
-      shopSpeedLv: document.getElementById('shopSpeedLv'),
-      shopBrakesLv: document.getElementById('shopBrakesLv'),
-      btnUpgradeSpeed: document.getElementById('btnUpgradeSpeed'),
-      btnUpgradeBrakes: document.getElementById('btnUpgradeBrakes'),
-      endShiftNum: document.getElementById('endShiftNum'),
-      endShiftType: document.getElementById('endShiftType')
+      leaderboardList: document.getElementById('leaderboardList')
     };
     
     this.setupEvents();
@@ -58,10 +52,8 @@ export class UIManager {
       this.game.startShift();
     });
     
-    document.getElementById('btnNextDay').addEventListener('click', () => {
-      this.saveSystem.data.shift++;
-      this.saveSystem.data.money = this.game.orderSystem.stats.money;
-      this.saveSystem.save();
+    document.getElementById('btnEndToMenu').addEventListener('click', () => {
+      this.saveSystem.resetProgress();
       location.reload();
     });
     
@@ -72,20 +64,6 @@ export class UIManager {
     
     document.getElementById('btnMenu').addEventListener('click', () => {
       location.reload();
-    });
-
-    this.els.btnUpgradeSpeed.addEventListener('click', () => {
-      if (this.saveSystem.buyUpgrade('speed')) {
-        this.game.orderSystem.stats.money = this.saveSystem.data.money;
-        this.updateShopUI();
-      }
-    });
-    
-    this.els.btnUpgradeBrakes.addEventListener('click', () => {
-      if (this.saveSystem.buyUpgrade('brakes')) {
-        this.game.orderSystem.stats.money = this.saveSystem.data.money;
-        this.updateShopUI();
-      }
     });
   }
   
@@ -138,62 +116,38 @@ export class UIManager {
     this.els.ordersContainer.innerHTML = html;
   }
   
-  updateShopUI() {
-    const stats = this.game.orderSystem.stats;
-    document.getElementById('endMoney').innerText = stats.money.toLocaleString() + 'đ';
-    
-    const speedLv = this.saveSystem.data.upgrades.speed;
-    const brakesLv = this.saveSystem.data.upgrades.brakes;
-    
-    this.els.shopSpeedLv.innerText = speedLv;
-    this.els.shopBrakesLv.innerText = brakesLv;
-    
-    const speedCost = this.saveSystem.getUpgradeCost('speed');
-    const brakesCost = this.saveSystem.getUpgradeCost('brakes');
-    
-    this.els.btnUpgradeSpeed.innerText = speedLv >= 5 ? 'MAX' : `${speedCost.toLocaleString()}đ`;
-    this.els.btnUpgradeBrakes.innerText = brakesLv >= 5 ? 'MAX' : `${brakesCost.toLocaleString()}đ`;
-    
-    this.els.btnUpgradeSpeed.disabled = speedLv >= 5 || stats.money < speedCost;
-    this.els.btnUpgradeBrakes.disabled = brakesLv >= 5 || stats.money < brakesCost;
-  }
-
   showEndOfDay(stats) {
+    // Nếu tiền <= 0 thì bị sa thải, không lưu vào bảng xếp hạng
+    if (stats.money <= 0) {
+      this.els.hud.classList.add('hidden');
+      this.els.gameOver.classList.remove('hidden');
+      document.getElementById('gameOverReasons').innerHTML = `<li>Tiền của bạn đã hết, bạn bị sa thải!</li>`;
+      return;
+    }
+    
     this.els.hud.classList.add('hidden');
-    this.els.endDay.classList.remove('hidden');
+    this.els.endOfDay.classList.remove('hidden');
     
-    const shift = this.saveSystem.data.shift;
-    this.els.endShiftNum.innerText = shift;
-    
-    const type = shift % 3 === 1 ? 'Ca Sáng' : (shift % 3 === 2 ? 'Ca Chiều' : 'Ca Tối');
-    this.els.endShiftType.innerText = type;
-    
+    document.getElementById('endMoney').innerText = stats.money.toLocaleString() + 'đ';
     document.getElementById('endOrders').innerText = stats.successfulOrders;
     document.getElementById('endRating').innerText = stats.rating.toFixed(1);
     document.getElementById('endCollisions').innerText = stats.collisions + ' lần';
     
-    // Luôn lưu điểm cao nhất
+    const shift = this.saveSystem.data.shift;
+    
+    // Chỉ lưu vào bảng xếp hạng nếu tiền > 0
     this.saveSystem.addLeaderboardEntry({
       shift: shift,
       money: stats.money,
       rating: stats.rating
     });
-    
-    this.saveSystem.data.money = stats.money; // Sync money to save
-    this.updateShopUI();
   }
   
   showGameOver(reason) {
     this.els.hud.classList.add('hidden');
     this.els.gameOver.classList.remove('hidden');
     document.getElementById('gameOverReasons').innerHTML = `<li>${reason}</li>`;
-    
-    // Lưu điểm nếu chết
-    this.saveSystem.addLeaderboardEntry({
-      shift: this.saveSystem.data.shift,
-      money: this.game.orderSystem.stats.money,
-      rating: this.game.orderSystem.stats.rating
-    });
+    // Không lưu vào bảng xếp hạng khi bị sa thải
   }
   
   showNotification(text, duration = 3000) {
