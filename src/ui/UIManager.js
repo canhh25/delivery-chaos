@@ -22,6 +22,19 @@ export class UIManager {
     
     this.setupEvents();
     this.initMainMenu();
+    
+    // Nếu đang retry → bỏ qua menu, chơi luôn
+    if (localStorage.getItem('delivery_chaos_autostart') === 'true') {
+      localStorage.removeItem('delivery_chaos_autostart');
+      setTimeout(() => {
+        initAudio();
+        BGM.start();
+        Sfx.shiftStart();
+        this.els.mainMenu.classList.add('hidden');
+        this.els.hud.classList.remove('hidden');
+        this.game.startShift();
+      }, 100);
+    }
   }
   
   initMainMenu() {
@@ -59,6 +72,7 @@ export class UIManager {
     
     document.getElementById('btnRetry').addEventListener('click', () => {
       this.saveSystem.resetProgress();
+      localStorage.setItem('delivery_chaos_autostart', 'true');
       location.reload();
     });
     
