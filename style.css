@@ -1,16 +1,19 @@
 :root {
-  --bg-color: #0f111a;
-  --panel-bg: rgba(25, 28, 41, 0.85);
-  --primary: #ff5722;
-  --primary-hover: #f4511e;
-  --secondary: #2c3143;
+  --bg-color: #0f1117;
+  --panel-bg: rgba(25, 28, 41, 0.86);
+  --primary: #ff6b2b;
+  --primary-hover: #ff5a13;
+  --secondary: rgba(24, 28, 40, 0.7);
   --text-main: #ffffff;
-  --text-muted: #8b92a5;
+  --text-muted: rgba(255, 255, 255, 0.55);
   --green: #4caf50;
   --red: #f44336;
   --orange: #ff9800;
   --glass-border: rgba(255, 255, 255, 0.1);
   --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 10px;
 }
 
 * {
@@ -22,7 +25,7 @@
 
 body {
   font-family: 'Inter', sans-serif;
-  background-color: #000;
+  background-color: var(--bg-color);
   color: var(--text-main);
   overflow: hidden;
   width: 100vw;
@@ -62,7 +65,9 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: var(--bg-color); /* solid bg for menus */
+  background: radial-gradient(1200px 600px at 50% 35%, rgba(255, 107, 43, 0.06), rgba(0, 0, 0, 0) 55%),
+              radial-gradient(900px 500px at 50% 60%, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0) 55%),
+              linear-gradient(180deg, #0b0d14 0%, #0f1117 100%);
   pointer-events: auto; /* Catch clicks on menus */
   transition: opacity 0.3s ease;
 }
@@ -74,7 +79,7 @@ body {
 }
 
 #hud {
-  background-color: transparent;
+  background: transparent;
   pointer-events: none;
   justify-content: flex-start;
 }
@@ -91,40 +96,49 @@ body {
 }
 
 /* Main Menu */
-#mainMenu .content {
+#mainMenu .menu-content {
   text-align: center;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
   align-items: center;
+  transform: translateY(10px);
 }
 
-#mainMenu h1 {
-  font-size: 3rem;
-  font-weight: 800;
+.game-title {
+  font-size: 64px;
+  font-weight: 400;
+  letter-spacing: 1px;
   color: var(--primary);
-  line-height: 1.1;
-  letter-spacing: 2px;
+  text-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  margin-bottom: 8px;
 }
 
-.emoji-hero {
-  font-size: 5rem;
-  filter: drop-shadow(0 0 20px rgba(255, 87, 34, 0.4));
+.hero-icon {
+  width: 150px;
+  height: 150px;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 14px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  overflow: hidden;
 }
 
-#mainMenu p {
-  color: var(--text-muted);
-  font-size: 1.1rem;
-  margin-bottom: 20px;
+.hero-icon img {
+  width: 150px;
+  height: 150px;
+  image-rendering: pixelated;
 }
 
 /* Buttons */
 button {
   font-family: 'Inter', sans-serif;
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 16px;
   padding: 12px 24px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -135,17 +149,23 @@ button:active {
   transform: scale(0.95);
 }
 
+.btn {
+  min-height: 50px;
+  width: 320px;
+  max-width: calc(100vw - 40px);
+}
+
+.btn-primary,
 .primary-btn {
   background-color: var(--primary);
   color: white;
-  width: 100%;
-  max-width: 250px;
-  box-shadow: 0 4px 15px rgba(255, 87, 34, 0.3);
+  box-shadow: 0 10px 24px rgba(255, 107, 43, 0.28), 0 0 0 1px rgba(0, 0, 0, 0.25) inset;
 }
 
+.btn-primary:hover,
 .primary-btn:hover {
   background-color: var(--primary-hover);
-  box-shadow: 0 6px 20px rgba(255, 87, 34, 0.5);
+  box-shadow: 0 12px 28px rgba(255, 107, 43, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.25) inset;
 }
 
 .secondary-btn {
@@ -250,12 +270,26 @@ button:active {
   pointer-events: none;
 }
 /* Shop & Leaderboard */
-.leaderboard-panel {
-  background: rgba(0,0,0,0.5);
-  padding: 15px;
-  border-radius: 8px;
+.leaderboard-card {
+  width: 320px;
+  max-width: calc(100vw - 40px);
+  padding: 14px 14px 10px;
+  border-radius: var(--radius-lg);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.35);
   text-align: left;
 }
+
+.leaderboard-title {
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
 .leaderboard-list {
   list-style: none;
   padding: 0; margin: 10px 0 0;
@@ -369,8 +403,9 @@ button:active {
 
 /* End of Day / Game Over */
 .dark-panel {
-  width: 350px;
-  padding: 30px;
+  width: 420px;
+  max-width: calc(100vw - 40px);
+  padding: 28px;
   text-align: center;
 }
 

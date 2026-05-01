@@ -15,13 +15,17 @@
     <div id="ui-layer">
       <!-- Main Menu -->
       <div id="mainMenu" class="screen active">
-        <div class="content">
-          <h1>DELIVERY<br>CHAOS</h1>
-          <div class="emoji-hero">🚚</div>
-          <button id="btnPlay" class="primary-btn">► BẮT ĐẦU CA</button>
-          
-          <div class="leaderboard-panel mt-4">
-            <h3>🏆 BẢNG XẾP HẠNG</h3>
+        <div class="menu-content">
+          <h1 class="game-title">DELIVERY CHAOS</h1>
+
+          <div class="hero-icon" aria-hidden="true">
+            <img src="/figma/truck.png" alt="" />
+          </div>
+
+          <button id="btnPlay" class="btn btn-primary">► BẮT ĐẦU CA</button>
+
+          <div class="leaderboard-card" role="region" aria-label="Bảng xếp hạng">
+            <div class="leaderboard-title">🏆 BẢNG XẾP HẠNG</div>
             <ul id="leaderboardList" class="leaderboard-list">
               <li>Chưa có dữ liệu</li>
             </ul>
@@ -83,7 +87,7 @@
 
       <!-- End of Day -->
       <div id="endOfDay" class="screen hidden">
-        <div class="content glass-panel dark-panel" style="width: 500px;">
+        <div class="content glass-panel dark-panel">
           <h2>KẾT THÚC CA</h2>
           <p class="subtitle">Kết quả làm việc</p>
           

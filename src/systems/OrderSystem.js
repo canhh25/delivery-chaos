@@ -6,7 +6,7 @@ export class OrderSystem {
     this.orders = [null, null, null]; // 3 active slots
     this.pendingPickups = []; // Orders waiting on map
     
-    this.shiftLength = 5; // 5 minutes
+    this.shiftLength = 5 * 60; // 5 minutes
     this.shiftTimer = this.shiftLength;
     
     this.stats = {
